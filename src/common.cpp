@@ -9,5 +9,6 @@ void Log::log(int level, const char* format, ...){
         va_start(arg, format);
         vprintf(format, arg);
         va_end(arg);
+        printf("\n");
     }
 }

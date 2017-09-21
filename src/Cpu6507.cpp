@@ -1,42 +1,62 @@
 #include "Cpu6507.h"
 #include <stdio.h>
+#include <functional>
+#include <iostream>
 
 Cpu6507::Cpu6507(Rom* rom) : Log(), rom(rom), ip(0) {
-    printf("Here\n");
-    log(1, "Log1 = 0x%x, log2 = %d\n", 0x15, 0x40);
+	_init_instr();
 }
 
-const Cpu6507::Instruction Cpu6507::instructions[] = {
-                            {0xA0, 1, &Cpu6507::_int_A0, NULL}, 
-                            {0xA1, 2, &Cpu6507::_int_A1, NULL}};
+Cpu6507::~Cpu6507(){
+	_deinit_instr();
+}
 
+void Cpu6507::_init_instr(){
+	Cpu6507::Instruction *instr;
+	for(int i = 0; i < 256; i++){
+		instructions[i] = NULL;		
+	}
+	
+	//Adding instructions
+	instr = new Cpu6507::Instruction(0, &Cpu6507::_int_A0, NULL);
+	instructions[0xA0] = instr;
+	
+	instr = new Cpu6507::Instruction(1, &Cpu6507::_int_A1, NULL);
+	instructions[0xA1] = instr;
+	
+}
+
+void Cpu6507::_deinit_instr(){
+	for(int i = 0; i < 256; i++){
+		if (instructions[i] != NULL){
+			delete instructions[i];
+		}		
+	}
+}
+							
 void Cpu6507::do_one_instr(){
     if(rom == NULL){
+		//TODO: change to assert
         log(0, "ERROR: rom is null");
         return;
     }
-
-    int i;
-    uint8_t current_instr_idx;
+	
     uint8_t current_instr = rom->fetch(ip);
     ip++;
 
-    for(i = 0; i < sizeof(instructions); ++i){
-        if(instructions[i].opcode == current_instr){
-            current_instr_idx = i;
-            break;
-        }
-    }
-    if(i == sizeof(instructions)){
-        log(0, "ERROR", "Illegal instruction");
+    if(instructions[current_instr] == NULL){
+			log(0, "ERROR: Illegal instruction, opcode = 0x%x", current_instr);
+			return;
     }
 
-    for(i = 0; i < instructions[current_instr_idx].length_with_data; i++){
+    for(int i = 0; i < instructions[current_instr]->data_length; i++){
         args[i] = rom->fetch(ip);
         ip++;
     }
 
-    instructions[current_instr_idx].*interpretator();
+    // Cpu6507Fn ptf = instructions[current_instr]->interpretator;
+    // CALL_MEMBER_FN(*this, ptf)();
+    CALL_MEMBER_FN(*this, instructions[current_instr]->interpretator)();
 }
 
 void Cpu6507::_int_A0(void){
@@ -46,3 +66,4 @@ void Cpu6507::_int_A0(void){
 void Cpu6507::_int_A1(void){
     log(1,"A1 - 0x%x", this->args[1]);
 }
+
