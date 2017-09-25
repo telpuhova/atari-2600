@@ -2,28 +2,14 @@
 #include <stdio.h>
 #include <functional>
 #include <iostream>
+#include <assert.h>
 
-Cpu6507::Cpu6507(Rom* rom) : Log(), rom(rom), ip(0) {
+Cpu6507::Cpu6507(Rom* rom) : Log(), rom(rom), IP(0) {
 	_init_instr();
 }
 
 Cpu6507::~Cpu6507(){
 	_deinit_instr();
-}
-
-void Cpu6507::_init_instr(){
-	Cpu6507::Instruction *instr;
-	for(int i = 0; i < 256; i++){
-		instructions[i] = NULL;		
-	}
-	
-	//Adding instructions
-	instr = new Cpu6507::Instruction(0, &Cpu6507::_int_A0, NULL);
-	instructions[0xA0] = instr;
-	
-	instr = new Cpu6507::Instruction(1, &Cpu6507::_int_A1, NULL);
-	instructions[0xA1] = instr;
-	
 }
 
 void Cpu6507::_deinit_instr(){
@@ -35,35 +21,109 @@ void Cpu6507::_deinit_instr(){
 }
 							
 void Cpu6507::do_one_instr(){
-    if(rom == NULL){
-		//TODO: change to assert
-        log(0, "ERROR: rom is null");
-        return;
-    }
-	
-    uint8_t current_instr = rom->fetch(ip);
-    ip++;
+	assert(("ROM is NULL", rom != NULL));
+    	
+    uint8_t current_instr = rom->fetch(IP);
+    IP++;
 
     if(instructions[current_instr] == NULL){
-			log(0, "ERROR: Illegal instruction, opcode = 0x%x", current_instr);
-			return;
+		log(0, "ERROR: Illegal instruction, opcode = 0x%x", current_instr);
+		return;
     }
 
     for(int i = 0; i < instructions[current_instr]->data_length; i++){
-        args[i] = rom->fetch(ip);
-        ip++;
+        args[i] = rom->fetch(IP);
+        IP++;
     }
 
-    // Cpu6507Fn ptf = instructions[current_instr]->interpretator;
-    // CALL_MEMBER_FN(*this, ptf)();
     CALL_MEMBER_FN(*this, instructions[current_instr]->interpretator)();
 }
 
-void Cpu6507::_int_A0(void){
-    log(1,"A0");
+void Cpu6507::_init_instr(){
+	Cpu6507::Instruction *instr;
+	for(int i = 0; i < 256; i++){
+		instructions[i] = NULL;		
+	}
+	
+	//Adding instructions
+	instr = new Cpu6507::Instruction(0, 2, &Cpu6507::_TAY, NULL);
+	instructions[0xA8] = instr;
+	
+	instr = new Cpu6507::Instruction(0, 2, &Cpu6507::_TAX, NULL);
+	instructions[0xAA] = instr;
+	
+	instr = new Cpu6507::Instruction(0, 2, &Cpu6507::_TSX, NULL);
+	instructions[0xBA] = instr;
+	
+	instr = new Cpu6507::Instruction(0, 2, &Cpu6507::_TYA, NULL);
+	instructions[0x98] = instr;
+	
+	instr = new Cpu6507::Instruction(0, 2, &Cpu6507::_TXA, NULL);
+	instructions[0x8A] = instr;
+	
+	instr = new Cpu6507::Instruction(0, 2, &Cpu6507::_TXS, NULL);
+	instructions[0x9A] = instr;
+	
+	instr = new Cpu6507::Instruction(1, 2, &Cpu6507::_LDA_hnn, NULL);
+	instructions[0xA9] = instr;
+	
+	instr = new Cpu6507::Instruction(1, 2, &Cpu6507::_LDX_hnn, NULL);
+	instructions[0xA2] = instr;
+	
+	instr = new Cpu6507::Instruction(1, 2, &Cpu6507::_LDY_hnn, NULL);
+	instructions[0xA0] = instr;
+	
 }
 
-void Cpu6507::_int_A1(void){
-    log(1,"A1 - 0x%x", this->args[1]);
+//Instructions interpretator functions 
+void Cpu6507::_TAY(){
+    Y = A;
+	PSR.N = (Y >> 7) & 1;
+	PSR.Z = !Y;
 }
 
+void Cpu6507::_TAX(){
+    X = A;
+	PSR.N = (X >> 7) & 1;
+	PSR.Z = !X;
+}
+
+void Cpu6507::_TSX(){
+    X = S;
+	PSR.N = (X >> 7) & 1;
+	PSR.Z = !X;
+}
+
+void Cpu6507::_TYA(){
+    A = Y;
+	PSR.N = (A >> 7) & 1;
+	PSR.Z = !A;
+}
+
+void Cpu6507::_TXA(){
+    A = X;
+	PSR.N = (A >> 7) & 1;
+	PSR.Z = !A;
+}
+
+void Cpu6507::_TXS(){
+    S = X;
+}
+
+void Cpu6507::_LDA_hnn(){
+    A = args[0];
+	PSR.N = (A >> 7) & 1;
+	PSR.Z = !A;
+}
+
+void Cpu6507::_LDX_hnn(){
+    X = args[0];
+	PSR.N = (X >> 7) & 1;
+	PSR.Z = !X;
+}
+
+void Cpu6507::_LDY_hnn(){
+    Y = args[0];
+	PSR.N = (Y >> 7) & 1;
+	PSR.Z = !Y;
+}
