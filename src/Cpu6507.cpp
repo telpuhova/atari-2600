@@ -4,7 +4,7 @@
 #include <iostream>
 #include <assert.h>
 
-Cpu6507::Cpu6507(Rom* rom) : Log(), rom(rom), IP(0) {
+Cpu6507::Cpu6507(const char* device_name, MemoryController* memory_controller) : Log(device_name), memory_controller(memory_controller), IP(0) {
 	_init_instr();
 }
 
@@ -21,21 +21,26 @@ void Cpu6507::_deinit_instr(){
 }
 							
 void Cpu6507::do_one_instr(){
-	assert(("ROM is NULL", rom != NULL));
+	log(MAX_LOG_LEVEL, "do_one_instr");
+	assert(("memory_controller is NULL", memory_controller != NULL));
     	
-    uint8_t current_instr = rom->fetch(IP);
+    uint8_t current_instr = memory_controller->read_byte(IP);
     IP++;
+	log(MAX_LOG_LEVEL, "Got 0x%x", current_instr);
 
     if(instructions[current_instr] == NULL){
 		log(0, "ERROR: Illegal instruction, opcode = 0x%x", current_instr);
 		return;
     }
-
+	
+	log(MAX_LOG_LEVEL, "Retrieving args");
     for(int i = 0; i < instructions[current_instr]->data_length; i++){
-        args[i] = rom->fetch(IP);
+        args[i] = memory_controller->read_byte(IP);
         IP++;
+		log(MAX_LOG_LEVEL, "Got 0x%x", args[i]);
     }
 
+	log(MAX_LOG_LEVEL, "Calling interpretator");
     CALL_MEMBER_FN(*this, instructions[current_instr]->interpretator)();
 }
 

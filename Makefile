@@ -2,7 +2,7 @@ CC = g++
 DEBUG = -g
 CFLAGS = 
 LFLAGS = -lstdc++
-SOURCE = Cpu6507.h Cpu6507.cpp common.cpp common.h main.cpp rom.h rom.cpp
+SOURCE = ./src/Cpu6507.h ./src/Cpu6507.cpp ./src/common.cpp ./src/common.h ./src/main.cpp ./src/rom.h ./src/rom.cpp ./src/MemoryController.h ./src/MemoryController.cpp
 OBJECT = atari2600.o
 
 
@@ -12,4 +12,4 @@ $(OBJECT) : $(SOURCE)
 all: $(OBJECT)
 
 clean: 
-	rm $(OBJECT)
+	rm -f $(OBJECT)

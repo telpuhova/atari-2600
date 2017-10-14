@@ -1,5 +1,5 @@
 #include "common.h"
-#include "rom.h"
+#include "MemoryController.h"
 
 class Cpu6507;
 
@@ -7,15 +7,15 @@ typedef void (Cpu6507::*Cpu6507Fn)();
 #define CALL_MEMBER_FN(object, ptr_to_member) ((object).*(ptr_to_member))
 
 
-class Cpu6507: private Log {
+class Cpu6507: public Log {
     struct Instruction {
         uint8_t data_length;
         uint8_t cycle_count;
         Cpu6507Fn interpretator;
         Cpu6507Fn disasm;
-		Instruction(uint8_t data_length, uint8_t cycle_count, Cpu6507Fn interpretator, Cpu6507Fn disasm): data_length(data_length), cycle_count(cycle_count), interpretator(interpretator), disasm() { }
+		Instruction(uint8_t data_length, uint8_t cycle_count, Cpu6507Fn interpretator, Cpu6507Fn disasm): data_length(data_length), cycle_count(cycle_count), interpretator(interpretator), disasm(disasm) { }
     };
-
+	
 	struct PSR_t {
 		uint8_t C : 1; //Carry         (0=No Carry, 1=Carry)
 		uint8_t Z : 1; //Zero          (0=Nonzero, 1=Zero)
@@ -28,7 +28,7 @@ class Cpu6507: private Log {
 	};
 
     public:
-        Cpu6507(Rom* rom);
+        Cpu6507(const char* device_name, MemoryController* memory_controller);
 		~Cpu6507();
         void do_one_instr();
     private:
@@ -43,7 +43,7 @@ class Cpu6507: private Log {
 		
 		
         uint8_t args[2];
-        Rom* rom;
+        MemoryController* memory_controller;
         Instruction *instructions[256];
 
 		void _init_instr();
