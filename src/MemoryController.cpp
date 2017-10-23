@@ -65,7 +65,7 @@ MemoryController::MapItem* MemoryController::find_memory(uint16_t address){
 void MemoryController::write_byte(uint16_t address, uint8_t byte) {
 	MapItem *map_item = find_memory(address);
 	if(map_item == NULL){
-		log(0, "ERROR: Unmapped write access, addr = 0x%x", address);
+		log_wo_check("ERROR: Unmapped write access, addr = 0x%x", address);
 		return;
 	}
 	map_item->memory->write_byte(address - map_item->start_address + map_item->offset, byte);
@@ -75,7 +75,7 @@ uint8_t MemoryController::read_byte(uint16_t address) {
 	log(MAX_LOG_LEVEL, "read_byte, addr = 0x%x", address);
 	MapItem *map_item = find_memory(address);
 	if(map_item == NULL){
-		log(0, "ERROR: Unmapped read access, addr = 0x%x", address);
+		log_wo_check("ERROR: Unmapped read access, addr = 0x%x", address);
 		return 0xFF;
 	}
 	map_item->memory->read_byte(address - map_item->start_address + map_item->offset);

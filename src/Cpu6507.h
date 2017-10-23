@@ -1,5 +1,6 @@
 #include "common.h"
 #include "MemoryController.h"
+#include <assert.h>
 
 class Cpu6507;
 
@@ -13,7 +14,10 @@ class Cpu6507: public Log {
         uint8_t cycle_count;
         Cpu6507Fn interpretator;
         Cpu6507Fn disasm;
-		Instruction(uint8_t data_length, uint8_t cycle_count, Cpu6507Fn interpretator, Cpu6507Fn disasm): data_length(data_length), cycle_count(cycle_count), interpretator(interpretator), disasm(disasm) { }
+		Instruction(uint8_t data_length, uint8_t cycle_count, Cpu6507Fn interpretator, Cpu6507Fn disasm): data_length(data_length), cycle_count(cycle_count), disasm(disasm) { 
+			assert(interpretator != NULL);
+			this->interpretator = interpretator;
+		}
     };
 	
 	struct PSR_t {
@@ -50,7 +54,9 @@ class Cpu6507: public Log {
 		void _deinit_instr();
 		
 		//Instructions interpretator functions 
+		//Register/Immeditate to Register Transfer
 		void _TAY();
+		void _d_TAY();
 		void _TAX();
 		void _TSX();
 		void _TYA();
@@ -59,4 +65,16 @@ class Cpu6507: public Log {
 		void _LDA_hnn();
 		void _LDX_hnn();
 		void _LDY_hnn();
+		//Load Register from Memory
+		void _LDA_nn();
+		void _d_LDA_nn();
+		void _LDA_nn_X();
+		void _d_LDA_nn_X();
+		void _LDA_nnnn();
+		void _d_LDA_nnnn();
+		//TODO
+		//Store Register in Memory
+		void _STA_nn();
+		void _STA_nn_X();
+		//TODO
 };
